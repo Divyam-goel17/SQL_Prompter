@@ -8,10 +8,15 @@ from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
 import streamlit as st
 
+# Using mysql connector to connect to the Chinnok database used here. Chonnok is a free databse which serves as an alternative to Northwind database. 
+# Details of it can be found here: https://github.com/lerocha/chinook-database
+
 def init_database(user: str, password: str, host: str, port: str, database: str) -> SQLDatabase:
   db_uri = f"mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}"
   return SQLDatabase.from_uri(db_uri)
 
+
+# A template is used here to feed to the first SQL Chain and then using few shot prompting, I have asked the model to generate only the SQL Query without any text with it
 def get_sql_chain(db):
   template = """
     You are a data analyst at a company. You are interacting with a user who is asking you questions about the company's database.
@@ -50,6 +55,8 @@ def get_sql_chain(db):
     | StrOutputParser()
   )
     
+
+# After setting up the first chain, the query is fed to another chain via the below template. It generates a natural language answer in English
 def get_response(user_query: str, db: SQLDatabase, chat_history: list):
   sql_chain = get_sql_chain(db)
   
@@ -88,13 +95,15 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
       AIMessage(content="Hello! I'm a SQL assistant. Ask me anything about your database."),
     ]
-
+# .env file is loaded here. It has the API key used in this project
 load_dotenv()
 
+# Streamlit is used for the frontend part of this code. It is a popular framework used in data science to deliver dynamic data apps with only a few lines of code
 st.set_page_config(page_title="Chat with MySQL", page_icon=":speech_balloon:")
 
 st.title("Chat with MySQL-Chinook DB")
 
+# Setting the sidebar to connect to Chinook DataBase
 with st.sidebar:
     st.subheader("Settings")
     st.write("This is a simple chat application using MySQL. Connect to the database and start chatting.")
